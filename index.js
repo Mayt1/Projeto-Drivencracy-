@@ -40,7 +40,23 @@ app.post('/poll', async (req, res) => {
     res.status(201).send("Criado com sucess")
 });
 
-
+app.get("/poll", async (req, res) => {
+    try {
+        await mongoClient.connect()
+        const db = mongoClient.db(process.env.DATABASE);
+        const polls = await db.collection("poll").find().toArray();
+        console.log(polls);
+        if(polls) {
+            res.status(200).send(polls);
+        } else {
+            console.log("Nao foi possivel encontrar os polls")
+            res.sendStatus(404);
+        }
+    } catch (e) {
+        console.error(e);
+        return res.sendStatus(422);
+    }
+});
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
