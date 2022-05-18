@@ -22,7 +22,7 @@ app.post('/poll', async (req, res) => {
     }
     if (!title) {
         console.log("titulo nao pode ser vazio")
-        res.status(422).send("titulo nao pode ser vazio");
+        return res.status(422).send("titulo nao pode ser vazio");
     }
     try {
         await mongoClient.connect()
@@ -31,13 +31,11 @@ app.post('/poll', async (req, res) => {
             title: title,
             expireAt: expireAt
         });
-        res.status(201).send("Usuario cadastrado com sucesso");
+        return res.status(201).send("Usuario cadastrado com sucesso");
     } catch (e) {
         console.error(e);
-        res.sendStatus(422);
+        return res.sendStatus(422);
     }
-    console.log(expireAt);
-    res.status(201).send("Criado com sucess");
 });
 
 app.get("/poll", async (req, res) => {
@@ -47,14 +45,14 @@ app.get("/poll", async (req, res) => {
         const polls = await db.collection("poll").find().toArray();
         console.log(polls);
         if (polls) {
-            res.status(200).send(polls);
+            return res.status(200).send(polls);
         } else {
             console.log("Nao foi possivel encontrar os polls")
-            res.sendStatus(404);
+            return res.sendStatus(404);
         }
     } catch (e) {
         console.log(e);
-        res.sendStatus(422);
+        return res.sendStatus(422);
     }
 });
 
@@ -62,7 +60,7 @@ app.post('/choice', async (req, res) => {
     const { title, poolId } = req.body;
     if (!title) {
         console.log("titulo nao pode ser vazio")
-        res.status(422).send("titulo nao pode ser vazio");
+        return res.status(422).send("titulo nao pode ser vazio");
     }
     try {
         await mongoClient.connect()
@@ -75,23 +73,23 @@ app.post('/choice', async (req, res) => {
             if (validador) {
                 console.log("enquete aberta")
             } else {
-                res.status(403).send("enquete já expirada")
+                return res.status(403).send("enquete já expirada")
             }
         }
         if (!poll) {
-            res.status(404).send("nao existe esta enquete")
+            return res.status(404).send("nao existe esta enquete")
         }
         if (isTitleAtPoll) {
-            res.status(409).send("Esta opçao ja existe")
+            return res.status(409).send("Esta opçao ja existe")
         }
         await db.collection("choice").insertOne({
             title: title,
             poolId: poolId
         });
-        res.status(201).send("Escolha cadastrada com sucesso");
+        return res.status(201).send("Escolha cadastrada com sucesso");
     } catch (e) {
         console.log(e);
-        res.sendStatus(422);
+        return res.sendStatus(422);
     }
 });
 
@@ -102,19 +100,19 @@ app.get("/poll/:id/choice", async (req, res) => {
         const db = mongoClient.db(process.env.DATABASE);
         const pool = await db.collection("poll").findOne({ _id: new ObjectId(id) });
         if (!pool) {
-            res.status(405).send("Nao foi possivel encontrar a enquete");
+            return res.status(405).send("Nao foi possivel encontrar a enquete");
         } else {
             const choices = await db.collection("choice").find({ poolId: id }).toArray();
             console.log(choices);
             if (choices.length !== 0) {
-                res.status(200).send(choices);
+                return res.status(200).send(choices);
             } else {
-                res.status(404).send("Esta enquete ainda nao tem opçoes");
+                return res.status(404).send("Esta enquete ainda nao tem opçoes");
             }
         }
     } catch (e) {
         console.log(e);
-        res.sendStatus(422);
+        return res.sendStatus(422);
     }
 });
 
@@ -150,6 +148,7 @@ app.post("/choice/:id/vote", async (req, res) => {
         return res.sendStatus(422);
     }
 });
+
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
     console.log("Back-end funcionando, nao esquece de desligar a cada atualizaçao")
