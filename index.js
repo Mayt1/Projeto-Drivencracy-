@@ -149,6 +149,53 @@ app.post("/choice/:id/vote", async (req, res) => {
     }
 });
 
+app.get("/poll/:id/result", async (req, res) => {
+    const { id } = req.params;
+    try {
+        await mongoClient.connect()
+        const db = mongoClient.db(process.env.DATABASE);
+        const pool = await db.collection("poll").findOne({ _id: new ObjectId(id) });
+        if (!pool) {
+            return res.status(405).send("Nao foi possivel encontrar a enquete");
+        } else {
+            const choices = await db.collection("choice").find({ poolId: id }).toArray();
+            if (choices.length !== 0) {
+                let maiorNroVote = -1;
+                let result = {}
+                for (let j = 0; j < choices.length; j++) {
+                    let titles = choices[j].title;
+                    let aux = (choices[j]._id).toString();
+                    const valor = await db.collection("votes").find({ choiceId: aux }).toArray();
+                    //console.log(valor.length, aux, titles);
+                    if(valor.length > maiorNroVote){
+                        result = { title: titles, votes: valor.length}
+                        maiorNroVote = valor.length
+                    }
+                }
+                //console.log(pool)
+                let poolWinner = {"_id":pool._id, "title":pool.title, "expireAt":pool.expireAt, result}
+                return res.status(200).send(poolWinner);
+            } else {
+                return res.status(404).send("Esta enquete ainda nao tem opçoes");
+            }
+        }
+    } catch (e) {
+        console.log(e);
+        return res.sendStatus(422);
+    }
+});
+
+// {
+// 	_id: "54759eb3c090d83494e2d222",
+// 	title: "Qual a sua linguagem de programação favorita?"
+// 	expireAt: "2022-02-14 01:00",
+// 	result : {
+// 		title: "Javascript",
+// 		votes: 487
+// 	}
+// }
+
+
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
     console.log("Back-end funcionando, nao esquece de desligar a cada atualizaçao")
