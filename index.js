@@ -185,17 +185,6 @@ app.get("/poll/:id/result", async (req, res) => {
     }
 });
 
-// {
-// 	_id: "54759eb3c090d83494e2d222",
-// 	title: "Qual a sua linguagem de programação favorita?"
-// 	expireAt: "2022-02-14 01:00",
-// 	result : {
-// 		title: "Javascript",
-// 		votes: 487
-// 	}
-// }
-
-
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
     console.log("Back-end funcionando, nao esquece de desligar a cada atualizaçao")
